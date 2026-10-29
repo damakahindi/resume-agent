@@ -12,6 +12,19 @@ namespace ResumeAgent.Tests;
 public sealed class ApiTests
 {
     [Fact]
+    public async Task BuiltFrontendAndAssetsAreServedBeforeUnmatchedRoutes()
+    {
+        using var factory = new LocalFactory();
+        using var client = factory.CreateClient();
+        var page = await client.GetAsync("/");
+        Assert.Equal(HttpStatusCode.OK, page.StatusCode);
+        Assert.Contains("Synthetic frontend", await page.Content.ReadAsStringAsync());
+        var asset = await client.GetAsync("/smoke.js");
+        Assert.Equal(HttpStatusCode.OK, asset.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync("/missing")).StatusCode);
+    }
+
+    [Fact]
     public async Task MutationsRequireCustomHeaderAndRejectForeignOrigin()
     {
         using var factory = new LocalFactory();
@@ -101,8 +114,17 @@ public sealed class ApiTests
         private readonly string directory = Path.Combine(
             Path.GetTempPath(), "resume-agent-api-test-" + Guid.NewGuid());
 
+        public LocalFactory()
+        {
+            Directory.CreateDirectory(Path.Combine(directory, "wwwroot"));
+            File.WriteAllText(Path.Combine(directory, "wwwroot", "index.html"), "Synthetic frontend");
+            File.WriteAllText(Path.Combine(directory, "wwwroot", "smoke.js"), "console.log('synthetic');");
+        }
+
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
+            builder.UseEnvironment("Testing");
+            builder.UseWebRoot(Path.Combine(directory, "wwwroot"));
             builder.ConfigureServices(services =>
             {
                 services.RemoveAll<KnowledgeStore>();
@@ -115,6 +137,13 @@ public sealed class ApiTests
             base.Dispose(disposing);
             var file = Path.Combine(directory, "knowledge.json");
             if (File.Exists(file)) File.Delete(file);
+            var webRoot = Path.Combine(directory, "wwwroot");
+            if (Directory.Exists(webRoot))
+            {
+                File.Delete(Path.Combine(webRoot, "index.html"));
+                File.Delete(Path.Combine(webRoot, "smoke.js"));
+                Directory.Delete(webRoot);
+            }
             if (Directory.Exists(directory)) Directory.Delete(directory);
         }
     }

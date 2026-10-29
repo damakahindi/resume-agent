@@ -11,7 +11,7 @@ This is a human-in-the-loop drafting tool, not an autonomous job applicant. It d
 3. **Maintain your baseline profile.** Enter your real work history, titles, dates, skills, education, and contact details. These fields are treated as verified facts and reused in each application.
 4. **Paste a role.** Enter company, title, and the public job description. The matcher ranks approved facts by keyword overlap. Select up to 12 relevant facts; this is not an ATS score or hiring prediction.
 5. **Call the reviewer agent.** It drafts a targeted summary, evidence-cited achievement bullets, and cover letter, then performs a separate critical review. Raw source text is excluded from both model calls.
-6. **Personally verify and export.** Inspect the reviewer findings, source citations, all claims, and confidentiality. Drafts with reviewer errors cannot be approved. Fix evidence and regenerate. After explicit approval, export editable DOCX or Markdown files, make final edits, and submit yourself.
+6. **Personally verify and export.** Inspect the reviewer findings, source citations, all claims, and confidentiality. Drafts with reviewer errors cannot be approved. Regenerate unsupported drafts, and correct genuine source errors without inventing evidence to justify model output. After explicit approval, export editable DOCX or Markdown files, make final edits, and submit yourself.
 
 Employers may prohibit AI-written applications. Mark such roles explicitly; common prohibition wording is also detected. Drafting is blocked in that case. Detection is not comprehensive: check the employer's actual policy yourself.
 
@@ -39,7 +39,7 @@ From the repository root:
 ```powershell
 dotnet restore ResumeAgent.sln
 Push-Location src\ResumeAgent.Web
-npm install
+npm ci
 npm run build
 Pop-Location
 dotnet run --project src\ResumeAgent.Api --no-launch-profile
@@ -161,7 +161,7 @@ Git, and Ollama. From your project directory:
 ```bash
 dotnet restore ResumeAgent.sln
 cd src/ResumeAgent.Web
-npm install
+npm ci
 npm run build
 cd ../..
 dotnet run --project src/ResumeAgent.Api --no-launch-profile
@@ -181,6 +181,18 @@ and model configs installed on your desktop are not automatically installed on U
 Use `AGENTS.md` for project coding rules. Keep private career documents outside the workspace
 and do not add them as cloud-agent context. Model-backed local coding agents still need
 permission checks and human review; a small local model is not a substitute for tests.
+
+`examples/continue-local.yaml` provides a local-only Continue configuration. Install it
+as your user's Continue config only if no config exists; otherwise merge it without
+overwriting existing settings. In an SSH window, use the Ubuntu user's config, not the
+Windows user's config.
+
+`examples/ollama-local-only.conf` is a Linux systemd drop-in for `ollama.service`.
+It pins the listener to `127.0.0.1:11434` and disables Ollama cloud features.
+Install it under `/etc/systemd/system/ollama.service.d/` with administrator approval,
+then reload systemd and restart Ollama. Confirm with `systemctl is-active ollama`
+and `ss -ltn | grep 11434`. Keep private data out of cloud-agent workspaces even when
+local inference is available.
 
 ## Next milestones
 

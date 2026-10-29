@@ -294,7 +294,8 @@ function App() {
           <h4>Education</h4><pre>{application.profile.education}</pre>
           <h3>Cover letter</h3><pre>{application.draft.coverLetter}</pre>
           <p>Edit exported DOCX files in your word processor before sending. If the reviewer flags errors,
-            correct your evidence and regenerate; this app will not approve an error-bearing draft.</p>
+            inspect the claims and regenerate. Correct genuine source errors, but never invent evidence
+            to justify model output. This app will not approve an error-bearing draft.</p>
           {!application.approvedAt && <>
             <label className="check"><input type="checkbox" checked={confirmed}
               onChange={e => setConfirmed(e.target.checked)} />

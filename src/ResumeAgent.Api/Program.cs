@@ -185,7 +185,7 @@ app.MapPost("/api/applications/{id:guid}/approve", async (
         if (index < 0) throw new InputException("Application not found.");
         var draft = state.Applications[index];
         if (draft.Findings.Any(f => f.Severity == "error"))
-            throw new InputException("This draft has reviewer errors. Fix the source evidence and regenerate.");
+            throw new InputException("Reviewer errors remain. Review the findings and regenerate; never invent evidence to justify a draft.");
         return state.Applications[index] = draft with { ApprovedAt = DateTimeOffset.UtcNow };
     }, ct));
 });
@@ -212,10 +212,6 @@ app.MapGet("/api/applications/{id:guid}/export/{kind}/{format}", async (
     };
 });
 
-app.MapFallback(() => Results.NotFound(new
-{
-    error = "Build the React app first (see README), or use its development server."
-}));
 app.Run();
 
 public sealed record ApprovalInput(bool Confirmed);
